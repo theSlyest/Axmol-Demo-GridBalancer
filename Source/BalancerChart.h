@@ -5,8 +5,6 @@
 
 #include <deque>
 
-#include "DemandCurve.h"
-
 class BalancerChart : public ax::DrawNode
 {
 public:
@@ -15,11 +13,8 @@ public:
     // implement the "static create()" method manually
     static BalancerChart* create(float tolerance);
 
-    void update(float dt) override;
-
-    void setSupply(const float supply) { _supply = supply; }
-
-    float getDemand() const { return _demandY / _contentSize.height; }
+    // `demand` and `supply` are normalized between 0 and 1.
+    void update(float dt, float demand, float supply);
 
     void reset(float initialValue);
 
@@ -57,7 +52,6 @@ private:
 
     float _toleranceWidth = 0.0f;
     float _demandY = 100.0f;
-    float _supply = 0.5f;
     float _supplyY = 100.0f;
     // Bounded history: the oldest samples are dropped once they scroll out of the chart.
     std::deque<Sample> _history;
@@ -65,8 +59,6 @@ private:
     float _sampleTimer = 0.0f;
     int _sampleIndex = 0; // samples taken since the last reset, minus one
     float _headX = 0.0f;  // x position of the newest sample
-
-    DemandCurve _curve;
 
     void addSample();
     void redraw();

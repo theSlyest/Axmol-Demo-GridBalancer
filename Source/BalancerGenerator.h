@@ -1,20 +1,23 @@
 #pragma once
 
+#include <functional>
+
 #include "2d/DrawNode.h"
 #include "2d/Label.h"
-#include "GeneratorModel.h"
 
 class BalancerGenerator : public ax::DrawNode
 {
 public:
-    static BalancerGenerator* create(const ax::Color4F& color, const std::string& name, float speed);
+    static BalancerGenerator* create(const ax::Color4F& color, const std::string& name);
 
-    virtual bool init(const ax::Color4F& color, const std::string& name, float speed);
+    virtual bool init(const ax::Color4F& color, const std::string& name);
 
-    void resetValue(float value);
-    float getValue() const { return _model.getValue(); }
+    // Fired when the player clicks an arrow.
+    std::function<void()> onIncrease;
+    std::function<void()> onDecrease;
 
-    void update(float dt) override;
+    // Show a level between 0 and 1 on the bar.
+    void setValue(float value) const;
 
 private:
     static const ax::Size SIZE;
@@ -27,9 +30,4 @@ private:
     
     ax::Label* _label = nullptr;
     ax::DrawNode* _bar = nullptr;
-
-    GeneratorModel _model{ 0.0f };
-
-    void decreaseValue();
-    void increaseValue();
 };

@@ -37,11 +37,14 @@ bool BalancerScene::init()
 
     setBest(UserDefault::getInstance()->getIntegerForKey(BEST_KEY, 0));
 
+    // GAME
+    initGame();
+
     // GENERATORS
     initGenerators(size, origin);
 
     // CHART
-    _chart = BalancerChart::create(TOLERANCE);
+    _chart = BalancerChart::create(_game->getTolerance());
     _chart->setAnchorPoint(Vec2::ANCHOR_MIDDLE_TOP);
     _chart->setPosition(origin.x + size.width / 2.0f, _upTimeUi->getBoundingBox().getMinY() - 3.0f * UI_OFFSET);
     addChild(_chart);
@@ -54,47 +57,33 @@ bool BalancerScene::init()
     return true;
 }
 
-void BalancerScene::update(float dt)
+void BalancerScene::update(const float dt)
 {
-    float supply = 0.0f;
-    for (auto gen : _gens) {
-        gen->update(dt);
-        supply += gen->getValue();
-    }
-    supply /= static_cast<float>(_gens.size());
-    _chart->setSupply(supply);
-    _chart->update(dt);
-    const float demand = _chart->getDemand();
-    if (std::abs(supply - demand) > TOLERANCE) {
-        _downTime += dt;
-        _chart->setGraceTime(_downTime);
-        _chart->setGraceVisible(true);
-        if (_downTime >= GRACE_PERIOD) {
-            setStrikes(_strikes - 1);
-            _downTime -= GRACE_PERIOD;
-            if (_strikes == 0) {
-                gameOver();
-                return;
-            }
-        }
-    }
-    else {
-        _chart->setGraceVisible(false);
-        _downTime = 0.0f;
-        setUpTime(_upTime + dt);
-    }
+    _game->update(dt);
+
+    for (size_t i = 0; i < _gens.size(); ++i)
+        _gens[i]->setValue(_game->getGeneratorValue(i));
+
+    _chart->update(dt, _game->getDemand(), _game->getSupply());
 }
 
-void BalancerScene::setUpTime(const float upTime)
+void BalancerScene::initGame()
 {
-    _upTime = upTime;
-    _upTimeUi->setValue(StringUtils::format("%03ds", static_cast<int>(upTime)));
-}
+    BalancerGame::Config config;
+    for (const auto& generator : GENERATORS)
+        config.generatorRates.push_back(generator.rate);
 
-void BalancerScene::setStrikes(const int strikes)
-{
-    _strikes = strikes;
-    _strikesUi->setValue(std::to_string(strikes));
+    _game = std::make_unique<BalancerGame>(config);
+    _game->onUpTimeChanged = [this](const float upTime) {
+        _upTimeUi->setValue(StringUtils::format("%03ds", static_cast<int>(upTime)));
+    };
+    _game->onStrikesChanged = [this](const int strikes) { _strikesUi->setValue(std::to_string(strikes)); };
+    _game->onGraceChanged = [this](const bool active, const float time) {
+        if (active)
+            _chart->setGraceTime(time);
+        _chart->setGraceVisible(active);
+    };
+    _game->onGameOver = [this] { gameOver(); };
 }
 
 void BalancerScene::setBest(const int best)
@@ -108,11 +97,12 @@ void BalancerScene::initGenerators(const Vec2& size, const Vec2& origin)
     const auto count = static_cast<float>(GENERATORS.size());
     const float offset = size.width / (count * 2.0f);
     for (size_t i = 0; i < GENERATORS.size(); ++i) {
-        const auto& [name, color, rate] = GENERATORS[i];
-        const auto gen = BalancerGenerator::create(color, name, rate);
+        const auto& spec = GENERATORS[i];
+        const auto gen = BalancerGenerator::create(spec.color, spec.name);
+        gen->onIncrease = [this, i] { _game->increase(i); };
+        gen->onDecrease = [this, i] { _game->decrease(i); };
         gen->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
         gen->setPosition(origin.x + offset + i * size.width / count, UI_OFFSET);
-        gen->resetValue(GEN_START);
         addChild(gen);
         _gens.push_back(gen);
     }
@@ -163,7 +153,7 @@ void BalancerScene::initEndLayer(const Vec2 &size, const Vec2 &origin)
 void BalancerScene::gameOver()
 {
     unscheduleUpdate();
-    const int intTime = static_cast<int>(_upTime);
+    const int intTime = static_cast<int>(_game->getUpTime());
     _upTimeLbl->setString(StringUtils::format("Uptime banked: %03ds", intTime));
 
     if (intTime > _best) {
@@ -180,10 +170,10 @@ void BalancerScene::gameOver()
 
 void BalancerScene::reset()
 {
-    _chart->reset(GEN_START);
-    setStrikes(STRIKES);
-    for (const auto gen : _gens)
-        gen->resetValue(GEN_START);
+    _game->reset();
+    _chart->reset(_game->getDemand());
+    for (size_t i = 0; i < _gens.size(); ++i)
+        _gens[i]->setValue(_game->getGeneratorValue(i));
 
     _endLayer->setVisible(false);
     scheduleUpdate();

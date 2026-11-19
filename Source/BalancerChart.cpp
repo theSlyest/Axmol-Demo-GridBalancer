@@ -105,12 +105,10 @@ bool BalancerChart::init(const float tolerance)
     return true;
 }
 
-void BalancerChart::update(const float dt)
+void BalancerChart::update(const float dt, const float demand, const float supply)
 {
-    _curve.update(dt);
-
-    _demandY = _curve.getValue() * _contentSize.height;
-    _supplyY = _supply * _contentSize.height;
+    _demandY = demand * _contentSize.height;
+    _supplyY = supply * _contentSize.height;
 
     _sampleTimer += dt;
     if (_sampleTimer >= SAMPLE_INTERVAL) {
@@ -159,7 +157,6 @@ void BalancerChart::reset(const float initialValue)
 {
     _demandY = _contentSize.height * initialValue;
     _supplyY = _demandY;
-    _supply = initialValue;
 
     _history.clear();
     _history.push_back({ _demandY, _supplyY });
@@ -168,7 +165,6 @@ void BalancerChart::reset(const float initialValue)
     _headX = 0.0f;
     redraw();
 
-    _curve.reset(initialValue);
 }
 
 void BalancerChart::setGraceTime(const float time) const

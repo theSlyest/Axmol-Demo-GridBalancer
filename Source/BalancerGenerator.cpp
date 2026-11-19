@@ -9,9 +9,9 @@ const Size BalancerGenerator::SIZE(48.0f, 260.0f);
 const Color4F BalancerGenerator::BG_COLOR(0.35f, 0.35f, 0.35f, 1.0f);
 const Color4F BalancerGenerator::BORDER_COLOR(0.85f, 0.85f, 0.85f, 1.0f);
 
-BalancerGenerator *BalancerGenerator::create(const Color4F &color, const std::string &name, const float speed)
+BalancerGenerator *BalancerGenerator::create(const Color4F &color, const std::string &name)
 {
-    if (auto* pRet = new (std::nothrow) BalancerGenerator(); pRet && pRet->init(color, name, speed))
+    if (auto* pRet = new (std::nothrow) BalancerGenerator(); pRet && pRet->init(color, name))
     {
         pRet->autorelease();
         return pRet;
@@ -24,7 +24,7 @@ BalancerGenerator *BalancerGenerator::create(const Color4F &color, const std::st
     }
 }
 
-bool BalancerGenerator::init(const Color4F &color, const std::string &name, const float speed)
+bool BalancerGenerator::init(const Color4F &color, const std::string &name)
 {
     if(!DrawNode::init())
         return false;
@@ -53,7 +53,7 @@ bool BalancerGenerator::init(const Color4F &color, const std::string &name, cons
     constexpr Size arrowSize(48.0f, 24.0f);
     const auto upLbl = Label::createWithTTF("  ", "fonts/arial.ttf", 64.0f);
     const auto upArrow = DrawNode::create();
-    const auto upItem = MenuItemLabel::create(upLbl, [this](Object*) { increaseValue(); });
+    const auto upItem = MenuItemLabel::create(upLbl, [this](Object*) { if (onIncrease) onIncrease(); });
     upArrow->setContentSize(arrowSize),
     upArrow->drawTriangle(Vec2(arrowSize.width / 4.0f, 0.0f),
                             Vec2(arrowSize.width / 2.0f, arrowSize.height),
@@ -65,7 +65,7 @@ bool BalancerGenerator::init(const Color4F &color, const std::string &name, cons
 
     const auto downLbl = Label::createWithTTF("  ", "fonts/arial.ttf", 64.0f);
     const auto downArrow = DrawNode::create();
-    const auto downItem = MenuItemLabel::create(downLbl, [this](Object*) { decreaseValue(); });
+    const auto downItem = MenuItemLabel::create(downLbl, [this](Object*) { if (onDecrease) onDecrease(); });
     downArrow->setContentSize(arrowSize),
     downArrow->drawTriangle(Vec2(arrowSize.width / 4.0f, arrowSize.height),
                             Vec2(arrowSize.width / 2.0f, 0.0f),
@@ -81,29 +81,10 @@ bool BalancerGenerator::init(const Color4F &color, const std::string &name, cons
     addChild(menu);
 
 
-    _model = GeneratorModel(speed);
-
     return true;
 }
 
-void BalancerGenerator::resetValue(const float value)
+void BalancerGenerator::setValue(const float value) const
 {
-    _model.reset(value);
-    _bar->setScaleY(_model.getValue());
-}
-
-void BalancerGenerator::update(const float dt)
-{
-    _model.update(dt);
-    _bar->setScaleY(_model.getValue());
-}
-
-void BalancerGenerator::decreaseValue()
-{
-    _model.decrease();
-}
-
-void BalancerGenerator::increaseValue()
-{
-    _model.increase();
+    _bar->setScaleY(value);
 }
