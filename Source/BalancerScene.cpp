@@ -69,14 +69,14 @@ void BalancerScene::initGame()
 void BalancerScene::initGenerators(const Vec2& size, const Vec2& origin)
 {
     const auto count = static_cast<float>(GENERATORS.size());
-    const float offset = size.width / (count * 2.0f);
+    const float first = origin.x + size.width / 2.0f - (count - 1.0f) * GENERATOR_SPACING / 2.0f;
     for (size_t i = 0; i < GENERATORS.size(); ++i) {
         const auto& spec = GENERATORS[i];
         const auto gen = BalancerGenerator::create(spec.color, spec.name);
         gen->onIncrease = [this, i] { _game->increase(i); };
         gen->onDecrease = [this, i] { _game->decrease(i); };
         gen->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
-        gen->setPosition(origin.x + offset + i * size.width / count, UI_OFFSET);
+        gen->setPosition(first + static_cast<float>(i) * GENERATOR_SPACING, UI_OFFSET);
         addChild(gen);
         _gens.push_back(gen);
     }

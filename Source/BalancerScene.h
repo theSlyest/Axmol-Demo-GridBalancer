@@ -23,6 +23,7 @@ public:
 
 private:
     const float UI_OFFSET = 32.0f;
+    const float GENERATOR_SPACING = 240.0f; // distance between two generators, centered on the screen
     
     struct GeneratorSpec
     {
