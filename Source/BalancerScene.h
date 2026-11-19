@@ -1,9 +1,12 @@
 #pragma once
 
-#include "axmol.h"
+#include "2d/DrawNode.h"
+#include "2d/Label.h"
+#include "2d/Scene.h"
 #include "BalancerValue.h"
 #include "BalancerGenerator.h"
 #include "BalancerChart.h"
+#include "EventListenerTouch.h"
 
 class BalancerScene : public ax::Scene
 {
@@ -65,8 +68,8 @@ private:
     void setStrikes(int strikes);
     void setBest(int best);
 
-    void initGenerators(const ax::Size& size, const ax::Vec2& origin);
-    void initEndLayer(const ax::Size& size, const ax::Vec2& origin);
+    void initGenerators(const ax::Vec2& size, const ax::Vec2& origin);
+    void initEndLayer(const ax::Vec2& size, const ax::Vec2& origin);
 
     void gameOver();
     void reset();

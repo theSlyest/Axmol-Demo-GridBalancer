@@ -1,6 +1,8 @@
 #pragma once
 
-#include "axmol.h"
+#include "2d/Camera.h"
+#include "2d/DrawNode.h"
+#include "2d/Label.h"
 
 class BalancerChart : public ax::DrawNode
 {

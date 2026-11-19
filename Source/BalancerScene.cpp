@@ -1,5 +1,9 @@
 #include "BalancerScene.h"
 
+#include "2d/Menu.h"
+#include "2d/MenuItem.h"
+#include "UserDefault.h"
+
 USING_NS_AX;
 
 Scene* BalancerScene::createScene()
@@ -10,7 +14,7 @@ Scene* BalancerScene::createScene()
 // on "init" you need to initialize your instance
 bool BalancerScene::init()
 {
-    if ( !Scene::init() )
+    if (!Scene::init())
         return false;
 
     const auto& size = Director::getInstance()->getVisibleSize();
@@ -84,25 +88,25 @@ void BalancerScene::update(float dt)
     }
 }
 
-void BalancerScene::setUpTime(float upTime)
+void BalancerScene::setUpTime(const float upTime)
 {
     _upTime = upTime;
     _upTimeUi->setValue(StringUtils::format("%03ds", static_cast<int>(upTime)));
 }
 
-void BalancerScene::setStrikes(int strikes)
+void BalancerScene::setStrikes(const int strikes)
 {
     _strikes = strikes;
     _strikesUi->setValue(std::to_string(strikes));
 }
 
-void BalancerScene::setBest(int best)
+void BalancerScene::setBest(const int best)
 {
     _best = best;
     _bestUi->setValue(StringUtils::format("%03ds", best));
 }
 
-void BalancerScene::initGenerators(const Size& size, const Vec2& origin)
+void BalancerScene::initGenerators(const Vec2& size, const Vec2& origin)
 {
     const float offset = size.width / (GENS * 2.0f);
     for (int i = 0; i < GENS; ++i) {
@@ -115,9 +119,9 @@ void BalancerScene::initGenerators(const Size& size, const Vec2& origin)
     }
 }
 
-void BalancerScene::initEndLayer(const ax::Size &size, const ax::Vec2 &origin)
+void BalancerScene::initEndLayer(const Vec2 &size, const Vec2 &origin)
 {
-    const Size endSize(400.0f, 300.0f);
+    constexpr Vec2 endSize(400.0f, 300.0f);
     _endLayer = DrawNode::create();
     _endLayer->setContentSize(endSize);
     _endLayer->drawSolidRect(Vec2::ZERO, endSize, Color4F(0.1f, 0.15f, 0.2f, 1.0f));
@@ -142,7 +146,7 @@ void BalancerScene::initEndLayer(const ax::Size &size, const ax::Vec2 &origin)
 
     const auto again = Label::createWithTTF("Play Again", "fonts/arial.ttf", 18.0f);
     const auto item = MenuItemLabel::create(again, [this](Object*) { reset(); });
-    const Size itemSize = item->getContentSize() + Size(48.0f, 24.0f);
+    const Vec2 itemSize = item->getContentSize() + Vec2(48.0f, 24.0f);
 
     const auto bg = DrawNode::create();
     bg->setContentSize(itemSize);
@@ -152,7 +156,7 @@ void BalancerScene::initEndLayer(const ax::Size &size, const ax::Vec2 &origin)
     bg->setPosition(item->getContentSize() / 2.0f);
     item->addChild(bg, -1);
 
-    auto menu = Menu::create(item, nullptr);
+    const auto menu = Menu::create(item, nullptr);
     menu->setPosition(endSize.width / 2.0f, 60.0f);
     _endLayer->addChild(menu);
 }
@@ -160,11 +164,11 @@ void BalancerScene::initEndLayer(const ax::Size &size, const ax::Vec2 &origin)
 void BalancerScene::gameOver()
 {
     unscheduleUpdate();
-    int intTime = static_cast<int>(_upTime);
+    const int intTime = static_cast<int>(_upTime);
     _upTimeLbl->setString(StringUtils::format("Uptime banked: %03ds", intTime));
 
     if (intTime > _best) {
-        auto userDef = UserDefault::getInstance();
+        const auto userDef = UserDefault::getInstance();
         userDef->setIntegerForKey(BEST_KEY, intTime);
         userDef->flush();
         setBest(intTime);
@@ -180,7 +184,7 @@ void BalancerScene::reset()
     _demandGoal = GEN_START;
     _chart->reset(GEN_START);
     setStrikes(STRIKES);
-    for (auto gen : _gens)
+    for (const auto gen : _gens)
         gen->resetValue(GEN_START);
 
     _demandIncrease = random(0, 1);

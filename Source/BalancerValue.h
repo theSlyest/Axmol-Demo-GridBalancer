@@ -1,6 +1,7 @@
 #pragma once
 
-#include "axmol.h"
+#include "2d/DrawNode.h"
+#include "2d/Label.h"
 
 class BalancerValue : public ax::DrawNode
 {
@@ -12,7 +13,7 @@ public:
     void setValue(const std::string& value) const { _label->setString(_name + ": " + value); }
 
 private:
-    static ax::Size PADDING;
+    static ax::Vec2 PADDING;
     static ax::Color4F BG_COLOR;
     static constexpr float BORDER = 4.0f;
 

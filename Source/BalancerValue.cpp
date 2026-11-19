@@ -2,7 +2,7 @@
 
 USING_NS_AX;
 
-Size BalancerValue::PADDING(64.0f, 32.0f);
+Vec2 BalancerValue::PADDING(64.0f, 32.0f);
 Color4F BalancerValue::BG_COLOR(0.1f, 0.1f, 0.2f, 1.0f);
 
 BalancerValue *BalancerValue::create(const Color4F &color, const std::string &name)

@@ -1,5 +1,8 @@
 #include "BalancerGenerator.h"
 
+#include "2d/Menu.h"
+#include "2d/MenuItem.h"
+
 USING_NS_AX;
 
 const Size BalancerGenerator::SIZE(48.0f, 260.0f);
@@ -93,7 +96,7 @@ void BalancerGenerator::resetValue(float value)
 
 void BalancerGenerator::update(float dt)
 {
-    float value = _bar->getScaleY();
+    const float value = _bar->getScaleY();
     if (value == _goal)
         return;
     

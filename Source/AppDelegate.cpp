@@ -25,6 +25,8 @@
 
 #include "AppDelegate.h"
 #include "BalancerScene.h"
+#include "RenderViewImpl.h"
+#include "Utils.h"
 
 #define USE_AUDIO_ENGINE 1
 
@@ -38,7 +40,7 @@
 
 using namespace ax;
 
-static ax::Size designResolutionSize = ax::Size(1280, 720);
+static Vec2 designResolutionSize = Vec2(1280, 720);
 
 AppDelegate::AppDelegate() {}
 
@@ -59,13 +61,13 @@ void AppDelegate::initGfxContextAttrs()
 bool AppDelegate::applicationDidFinishLaunching()
 {
     // initialize director
-    auto director = Director::getInstance();
+    const auto director = Director::getInstance();
     auto renderView   = director->getRenderView();
     if (!renderView)
     {
 #if (AX_TARGET_PLATFORM != AX_PLATFORM_ANDROID) && (AX_TARGET_PLATFORM != AX_PLATFORM_IOS)
         renderView = RenderViewImpl::createWithRect(
-            "AxmolExamples", ax::Rect(0, 0, designResolutionSize.width, designResolutionSize.height));
+            "AxmolExamples", Rect(0, 0, designResolutionSize.width, designResolutionSize.height));
 #else
         renderView = RenderViewImpl::create("AxmolExamples");
 #endif
@@ -84,7 +86,7 @@ bool AppDelegate::applicationDidFinishLaunching()
 
 #if !_AX_TESTS
     // create a scene. it's an autorelease object
-    auto scene = utils::createInstance<BalancerScene>();
+    const auto scene = utils::createInstance<BalancerScene>();
 
     // run
     director->runWithScene(scene);
@@ -127,7 +129,7 @@ int AppDelegate::run(int argc, char** argv) {
     }
     fflush(stdout);
 
-    ax::Director::getInstance()->init();
+    Director::getInstance()->init();
 
     doctest::Context context;
 

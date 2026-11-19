@@ -1,4 +1,5 @@
 #include "BalancerChart.h"
+#include "2d/ClippingNode.h"
 
 USING_NS_AX;
 
@@ -24,7 +25,6 @@ bool BalancerChart::init(const float tolerance)
 
     const auto& size = _director->getVisibleSize();
     setContentSize(Size(size.width - 64.0f, 200.0f));
-    // setLineWidth(LINE);
 
     _toleranceWidth = tolerance * _contentSize.height;
 

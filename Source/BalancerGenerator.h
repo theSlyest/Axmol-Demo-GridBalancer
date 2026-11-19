@@ -1,6 +1,7 @@
 #pragma once
 
-#include "axmol.h"
+#include "2d/DrawNode.h"
+#include "2d/Label.h"
 
 class BalancerGenerator : public ax::DrawNode
 {
