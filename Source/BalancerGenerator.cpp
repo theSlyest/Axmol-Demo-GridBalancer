@@ -9,6 +9,32 @@ const Size BalancerGenerator::SIZE(48.0f, 260.0f);
 const Color4F BalancerGenerator::BG_COLOR(0.35f, 0.35f, 0.35f, 1.0f);
 const Color4F BalancerGenerator::BORDER_COLOR(0.85f, 0.85f, 0.85f, 1.0f);
 
+namespace {
+// A menu item that shows a triangle pointing up or down. The item itself is a
+// blank label: its size is what makes the button easy to hit.
+MenuItem* createArrowButton(const bool pointsUp, const Color4F& color, std::function<void()> onClick)
+{
+    constexpr Size arrowSize(48.0f, 24.0f);
+    const float base = pointsUp ? 0.0f : arrowSize.height;
+    const float tip = pointsUp ? arrowSize.height : 0.0f;
+
+    const auto label = Label::createWithTTF("  ", "fonts/arial.ttf", 64.0f);
+    const auto item = MenuItemLabel::create(label, [onClick = std::move(onClick)](Object*) { onClick(); });
+
+    const auto arrow = DrawNode::create();
+    arrow->setContentSize(arrowSize);
+    arrow->drawTriangle(Vec2(arrowSize.width / 4.0f, base),
+                        Vec2(arrowSize.width / 2.0f, tip),
+                        Vec2(arrowSize.width * 3.0f / 4.0f, base),
+                        color);
+    arrow->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
+    arrow->setPosition(item->getContentSize() / 2.0f);
+    item->addChild(arrow, -1);
+
+    return item;
+}
+}
+
 BalancerGenerator *BalancerGenerator::create(const Color4F &color, const std::string &name)
 {
     if (auto* pRet = new (std::nothrow) BalancerGenerator(); pRet && pRet->init(color, name))
@@ -50,36 +76,13 @@ bool BalancerGenerator::init(const Color4F &color, const std::string &name)
     _bar->setPosition(barOffset, 80.0f + barOffset);
     addChild(_bar);
 
-    constexpr Size arrowSize(48.0f, 24.0f);
-    const auto upLbl = Label::createWithTTF("  ", "fonts/arial.ttf", 64.0f);
-    const auto upArrow = DrawNode::create();
-    const auto upItem = MenuItemLabel::create(upLbl, [this](Object*) { if (onIncrease) onIncrease(); });
-    upArrow->setContentSize(arrowSize),
-    upArrow->drawTriangle(Vec2(arrowSize.width / 4.0f, 0.0f),
-                            Vec2(arrowSize.width / 2.0f, arrowSize.height),
-                            Vec2(arrowSize.width * 3.0f / 4.0f, 0.0f),
-                            BORDER_COLOR);
-    upArrow->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
-    upArrow->setPosition(upItem->getContentSize() / 2.0f);
-    upItem->addChild(upArrow, -1);
-
-    const auto downLbl = Label::createWithTTF("  ", "fonts/arial.ttf", 64.0f);
-    const auto downArrow = DrawNode::create();
-    const auto downItem = MenuItemLabel::create(downLbl, [this](Object*) { if (onDecrease) onDecrease(); });
-    downArrow->setContentSize(arrowSize),
-    downArrow->drawTriangle(Vec2(arrowSize.width / 4.0f, arrowSize.height),
-                            Vec2(arrowSize.width / 2.0f, 0.0f),
-                            Vec2(arrowSize.width * 3.0f / 4.0f, arrowSize.height),
-                            BORDER_COLOR);
-    downArrow->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
-    downArrow->setPosition(downItem->getContentSize() / 2.0f);
-    downItem->addChild(downArrow, -1);
+    const auto upItem = createArrowButton(true, BORDER_COLOR, [this] { if (onIncrease) onIncrease(); });
+    const auto downItem = createArrowButton(false, BORDER_COLOR, [this] { if (onDecrease) onDecrease(); });
 
     const auto menu = Menu::create(upItem, downItem, nullptr);
     menu->alignItemsVerticallyWithPadding(160.0f);
     menu->setPosition(Vec2(SIZE) / 2.0f + Vec2(0.0f, 16.0f));
     addChild(menu);
-
 
     return true;
 }
