@@ -4,6 +4,7 @@
 
 #include "2d/DrawNode.h"
 #include "2d/Label.h"
+#include "2d/Menu.h"
 
 class BalancerGenerator : public ax::DrawNode
 {
@@ -19,6 +20,9 @@ public:
     // Show a level between 0 and 1 on the bar.
     void setValue(float value) const;
 
+    // Enable or disable the arrow buttons.
+    void setEnabled(bool enabled) const;
+
 private:
     static const ax::Size SIZE;
     static const ax::Color4F BG_COLOR;
@@ -30,4 +34,5 @@ private:
     
     ax::Label* _label = nullptr;
     ax::DrawNode* _bar = nullptr;
+    ax::Menu* _menu = nullptr;
 };

@@ -63,12 +63,14 @@ void BalancerGame::update(const float dt)
 
 void BalancerGame::increase(const size_t generator)
 {
-    _generators[generator].increase();
+    if (!_over)
+        _generators[generator].increase();
 }
 
 void BalancerGame::decrease(const size_t generator)
 {
-    _generators[generator].decrease();
+    if (!_over)
+        _generators[generator].decrease();
 }
 
 void BalancerGame::setStrikes(const int strikes)

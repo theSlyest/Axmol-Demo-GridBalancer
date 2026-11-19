@@ -99,6 +99,9 @@ void BalancerScene::gameOver()
         _hud->setBest(_best.get());
 
     _endLayer->show(upTime, _best.get());
+
+    for (const auto gen : _gens)
+        gen->setEnabled(false);
 }
 
 void BalancerScene::reset()
@@ -107,6 +110,9 @@ void BalancerScene::reset()
     _chart->reset(_game->getDemand());
     for (size_t i = 0; i < _gens.size(); ++i)
         _gens[i]->setValue(_game->getGeneratorValue(i));
+
+    for (const auto gen : _gens)
+        gen->setEnabled(true);
 
     _endLayer->hide();
     scheduleUpdate();

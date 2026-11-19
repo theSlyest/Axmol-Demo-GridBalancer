@@ -79,10 +79,10 @@ bool BalancerGenerator::init(const Color4F &color, const std::string &name)
     const auto upItem = createArrowButton(true, BORDER_COLOR, [this] { if (onIncrease) onIncrease(); });
     const auto downItem = createArrowButton(false, BORDER_COLOR, [this] { if (onDecrease) onDecrease(); });
 
-    const auto menu = Menu::create(upItem, downItem, nullptr);
-    menu->alignItemsVerticallyWithPadding(160.0f);
-    menu->setPosition(Vec2(SIZE) / 2.0f + Vec2(0.0f, 16.0f));
-    addChild(menu);
+    _menu = Menu::create(upItem, downItem, nullptr);
+    _menu->alignItemsVerticallyWithPadding(160.0f);
+    _menu->setPosition(Vec2(SIZE) / 2.0f + Vec2(0.0f, 16.0f));
+    addChild(_menu);
 
     return true;
 }
@@ -90,4 +90,9 @@ bool BalancerGenerator::init(const Color4F &color, const std::string &name)
 void BalancerGenerator::setValue(const float value) const
 {
     _bar->setScaleY(value);
+}
+
+void BalancerGenerator::setEnabled(const bool enabled) const
+{
+    _menu->setEnabled(enabled);
 }
