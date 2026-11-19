@@ -2,10 +2,6 @@
 
 #include "Director.h"
 
-#include "2d/Menu.h"
-#include "2d/MenuItem.h"
-#include "UserDefault.h"
-
 USING_NS_AX;
 
 // on "init" you need to initialize your instance
@@ -17,25 +13,11 @@ bool BalancerScene::init()
     const auto& size = _director->getVisibleSize();
     const Vec2& origin = _director->getVisibleOrigin();
 
-    // UPTIME
-    _upTimeUi = BalancerValue::create(Color4F(0.2f, 0.6f, 1.0f, 1.0f), "UPTIME");
-    _upTimeUi->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
-    _upTimeUi->setPosition(origin.x + UI_OFFSET, origin.y + size.height - UI_OFFSET);
-    addChild(_upTimeUi);
-
-    // STRIKES
-    _strikesUi = BalancerValue::create(Color4F(0.4f, 1.0f, 0.4f, 1.0f), "STRIKES");
-    _strikesUi->setAnchorPoint(Vec2::ANCHOR_MIDDLE_TOP);
-    _strikesUi->setPosition(origin.x + size.width / 2.0f, origin.y + size.height - UI_OFFSET);
-    addChild(_strikesUi);
-
-    // BEST
-    _bestUi = BalancerValue::create(Color4F(1.0f, 1.0f, 0.2f, 1.0f), "BEST");
-    _bestUi->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
-    _bestUi->setPosition(origin.x + size.width - UI_OFFSET, origin.y + size.height - UI_OFFSET);
-    addChild(_bestUi);
-
-    setBest(UserDefault::getInstance()->getIntegerForKey(BEST_KEY, 0));
+    // HUD
+    _hud = BalancerHud::create(size);
+    _hud->setPosition(origin);
+    _hud->setBest(_best.get());
+    addChild(_hud);
 
     // GAME
     initGame();
@@ -46,7 +28,7 @@ bool BalancerScene::init()
     // CHART
     _chart = BalancerChart::create(_game->getTolerance());
     _chart->setAnchorPoint(Vec2::ANCHOR_MIDDLE_TOP);
-    _chart->setPosition(origin.x + size.width / 2.0f, _upTimeUi->getBoundingBox().getMinY() - 3.0f * UI_OFFSET);
+    _chart->setPosition(origin.x + size.width / 2.0f, origin.y + _hud->getBottom() - 3.0f * UI_OFFSET);
     addChild(_chart);
 
     // GAME OVER LAYER
@@ -74,22 +56,14 @@ void BalancerScene::initGame()
         config.generatorRates.push_back(generator.rate);
 
     _game = std::make_unique<BalancerGame>(config);
-    _game->onUpTimeChanged = [this](const float upTime) {
-        _upTimeUi->setValue(StringUtils::format("%03ds", static_cast<int>(upTime)));
-    };
-    _game->onStrikesChanged = [this](const int strikes) { _strikesUi->setValue(std::to_string(strikes)); };
+    _game->onUpTimeChanged = [this](const float upTime) { _hud->setUpTime(upTime); };
+    _game->onStrikesChanged = [this](const int strikes) { _hud->setStrikes(strikes); };
     _game->onGraceChanged = [this](const bool active, const float time) {
         if (active)
             _chart->setGraceTime(time);
         _chart->setGraceVisible(active);
     };
     _game->onGameOver = [this] { gameOver(); };
-}
-
-void BalancerScene::setBest(const int best)
-{
-    _best = best;
-    _bestUi->setValue(StringUtils::format("%03ds", best));
 }
 
 void BalancerScene::initGenerators(const Vec2& size, const Vec2& origin)
@@ -110,62 +84,21 @@ void BalancerScene::initGenerators(const Vec2& size, const Vec2& origin)
 
 void BalancerScene::initEndLayer(const Vec2 &size, const Vec2 &origin)
 {
-    constexpr Vec2 endSize(400.0f, 300.0f);
-    _endLayer = DrawNode::create();
-    _endLayer->setContentSize(endSize);
-    _endLayer->drawSolidRect(Vec2::ZERO, endSize, Color4F(0.1f, 0.15f, 0.2f, 1.0f));
-    _endLayer->drawRect(Vec2::ZERO, endSize, Color4F(1.0f, 0.6f, 0.0f, 1.0f), 4.0f);
-    _endLayer->setVisible(false);
-    _endLayer->setPosition(origin + Vec2(size - endSize) / 2.0f);
+    _endLayer = BalancerGameOverLayer::create();
+    _endLayer->setPosition(origin + (size - Vec2(_endLayer->getContentSize())) / 2.0f);
+    _endLayer->onPlayAgain = [this] { reset(); };
     addChild(_endLayer, 1);
-
-    const auto out = Label::createWithTTF("Out of strikes", "fonts/arial.ttf", 24.0f);
-    out->setTextColor(Color4B(255, 64, 0, 255));
-    out->setPosition(endSize.width / 2.0f, 240.0f);
-    _endLayer->addChild(out);
-
-    _upTimeLbl = Label::createWithTTF("Uptime banked: 000s", "fonts/arial.ttf", 18.0f);
-    _upTimeLbl->setPosition(endSize.width / 2.0f, 180.0f);
-    _endLayer->addChild(_upTimeLbl);
-
-    _bestLbl = Label::createWithTTF("Best: 000s", "fonts/arial.ttf", 24.0f);
-    _bestLbl->setTextColor(Color4B(224, 224, 0, 255));
-    _bestLbl->setPosition(endSize.width / 2.0f, 120.0f);
-    _endLayer->addChild(_bestLbl);
-
-    const auto again = Label::createWithTTF("Play Again", "fonts/arial.ttf", 18.0f);
-    const auto item = MenuItemLabel::create(again, [this](Object*) { reset(); });
-    const Vec2 itemSize = item->getContentSize() + Vec2(48.0f, 24.0f);
-
-    const auto bg = DrawNode::create();
-    bg->setContentSize(itemSize);
-    bg->drawSolidRect(Vec2::ZERO, itemSize, Color4F(0.25f, 0.3f, 0.35f, 1.0f));
-    bg->drawRect(Vec2::ZERO, itemSize, Color4F(0.2f, 0.6f, 1.0f, 1.0f), 3.0f);
-    bg->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
-    bg->setPosition(item->getContentSize() / 2.0f);
-    item->addChild(bg, -1);
-
-    const auto menu = Menu::create(item, nullptr);
-    menu->setPosition(endSize.width / 2.0f, 60.0f);
-    _endLayer->addChild(menu);
 }
 
 void BalancerScene::gameOver()
 {
     unscheduleUpdate();
-    const int intTime = static_cast<int>(_game->getUpTime());
-    _upTimeLbl->setString(StringUtils::format("Uptime banked: %03ds", intTime));
 
-    if (intTime > _best) {
-        const auto userDef = UserDefault::getInstance();
-        userDef->setIntegerForKey(BEST_KEY, intTime);
-        userDef->flush();
-        setBest(intTime);
-    }
+    const int upTime = static_cast<int>(_game->getUpTime());
+    if (_best.submit(upTime))
+        _hud->setBest(_best.get());
 
-    _bestLbl->setString(StringUtils::format("Best: %03ds", _best));
-
-    _endLayer->setVisible(true);
+    _endLayer->show(upTime, _best.get());
 }
 
 void BalancerScene::reset()
@@ -175,6 +108,6 @@ void BalancerScene::reset()
     for (size_t i = 0; i < _gens.size(); ++i)
         _gens[i]->setValue(_game->getGeneratorValue(i));
 
-    _endLayer->setVisible(false);
+    _endLayer->hide();
     scheduleUpdate();
 }

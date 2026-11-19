@@ -3,13 +3,13 @@
 #include <array>
 #include <memory>
 
-#include "2d/DrawNode.h"
-#include "2d/Label.h"
 #include "2d/Scene.h"
-#include "BalancerGame.h"
-#include "BalancerValue.h"
-#include "BalancerGenerator.h"
 #include "BalancerChart.h"
+#include "BalancerGame.h"
+#include "BalancerGameOverLayer.h"
+#include "BalancerGenerator.h"
+#include "BalancerHud.h"
+#include "BestScore.h"
 
 class BalancerScene : public ax::Scene
 {
@@ -36,25 +36,17 @@ private:
         { "MEDIUM", ax::Color4F(0.2f, 0.6f, 1.0f, 1.0f), 0.25f },
         { "SLOW",   ax::Color4F(1.0f, 0.2f, 1.0f, 1.0f), 0.125f }
     }};
-    const char* BEST_KEY = "Best";
-
-    int _best = 0;
 
     std::unique_ptr<BalancerGame> _game;
+    BestScore _best;
 
-    BalancerValue* _upTimeUi = nullptr;
-    BalancerValue* _strikesUi = nullptr;
-    BalancerValue* _bestUi = nullptr;
+    BalancerHud* _hud = nullptr;
 
     std::vector<BalancerGenerator*> _gens;
 
     BalancerChart* _chart = nullptr;
 
-    ax::DrawNode* _endLayer = nullptr;
-    ax::Label* _upTimeLbl = nullptr;
-    ax::Label* _bestLbl = nullptr;
-
-    void setBest(int best);
+    BalancerGameOverLayer* _endLayer = nullptr;
 
     void initGame();
     void initGenerators(const ax::Vec2& size, const ax::Vec2& origin);
