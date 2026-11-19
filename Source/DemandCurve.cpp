@@ -26,7 +26,6 @@ void DemandCurve::reset(const float initialValue)
     _midLine = initialValue;
     _amplitude = 0.0f;
     _period = PERIOD_START;
-    _periodTimer = 0.0f;
     _sinSign = -1;
     _phase = 1.5f * std::numbers::pi_v<float>;
     onExtremumReached(false);
