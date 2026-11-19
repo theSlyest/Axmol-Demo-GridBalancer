@@ -80,41 +80,30 @@ bool BalancerGenerator::init(const Color4F &color, const std::string &name, cons
     menu->setPosition(Vec2(SIZE) / 2.0f + Vec2(0.0f, 16.0f));
     addChild(menu);
 
-    _speed = speed;
+
+    _model = GeneratorModel(speed);
 
     return true;
 }
 
-void BalancerGenerator::resetValue(float value)
+void BalancerGenerator::resetValue(const float value)
 {
-    if (0.0f > value || value > 1.0f)
-        return;
-    
-    _bar->setScaleY(value);
-    _goal = value;
+    _model.reset(value);
+    _bar->setScaleY(_model.getValue());
 }
 
-void BalancerGenerator::update(float dt)
+void BalancerGenerator::update(const float dt)
 {
-    const float value = _bar->getScaleY();
-    if (value == _goal)
-        return;
-    
-    const float shift = dt * _speed;
-    if (value < _goal)
-        _bar->setScaleY(std::min(value + shift, _goal));
-    else
-        _bar->setScaleY(std::max(value - shift, _goal));
+    _model.update(dt);
+    _bar->setScaleY(_model.getValue());
 }
 
 void BalancerGenerator::decreaseValue()
 {
-    if (_goal > 0.0f)
-        _goal = std::max(0.0f, _goal - STEP);
+    _model.decrease();
 }
 
 void BalancerGenerator::increaseValue()
 {
-    if (_goal < 1.0f)
-        _goal = std::min(1.0f, _goal + STEP);
+    _model.increase();
 }

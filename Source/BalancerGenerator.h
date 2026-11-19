@@ -2,6 +2,7 @@
 
 #include "2d/DrawNode.h"
 #include "2d/Label.h"
+#include "GeneratorModel.h"
 
 class BalancerGenerator : public ax::DrawNode
 {
@@ -11,7 +12,7 @@ public:
     virtual bool init(const ax::Color4F& color, const std::string& name, float speed);
 
     void resetValue(float value);
-    float getValue() const { return _bar->getScaleY(); }
+    float getValue() const { return _model.getValue(); }
 
     void update(float dt) override;
 
@@ -23,13 +24,11 @@ private:
     static constexpr float SPACING = 16.0f;
     static constexpr float BAR_PADDING = 4.0f;
     static constexpr float BAR_HEIGHT = 160.0f;
-    static constexpr float STEP = 0.25f;
     
     ax::Label* _label = nullptr;
     ax::DrawNode* _bar = nullptr;
 
-    float _speed = 0.1f;
-    float _goal = 1.0f;
+    GeneratorModel _model{ 0.0f };
 
     void decreaseValue();
     void increaseValue();
