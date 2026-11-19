@@ -92,7 +92,22 @@ _game = std::make_unique<BalancerGame>(config, middle);
 | Clipping a scrolling area with `ClippingNode` | `BalancerChart` |
 | Buttons with `Menu` and `MenuItemLabel` | `BalancerGenerator`, `BalancerGameOverLayer` |
 | Saving a value between runs with `UserDefault` | `BestScore` |
+| Unit tests with doctest for the engine-free classes | `Tests/` |
 | Views that only display state they are given | `BalancerHud`, `BalancerGameOverLayer`, `BalancerGenerator` |
+
+## Tests
+
+The classes that do not depend on Axmol (`GeneratorModel`, `DemandCurve` and `BalancerGame`) have unit tests in `Tests/`, written with [doctest](https://github.com/doctest/doctest), which Axmol bundles. The demand curve and the game take an injectable random source, so the tests are deterministic.
+
+Enable the test target when configuring, build it, and run the executable:
+
+```bash
+axmol build -p osx -a arm64 -f -xc '-D_AX_TESTS=ON'
+cmake --build build --target Axmol-Demo-GridBalancer_test --config RelWithDebInfo
+build/bin/Axmol-Demo-GridBalancer_test/RelWithDebInfo/Axmol-Demo-GridBalancer_test.app/Contents/MacOS/Axmol-Demo-GridBalancer_test
+```
+
+Pass `-D_AX_TESTS=OFF` when you are done to go back to building only the game.
 
 ## Source layout
 
@@ -105,6 +120,7 @@ _game = std::make_unique<BalancerGame>(config, middle);
 - `Source/BalancerHud.*`, `Source/BalancerValue.*`: the top boxes and the single labeled box they use.
 - `Source/BalancerGameOverLayer.*`: the end-of-game panel.
 - `Source/BestScore.*`: the saved best uptime.
+- `Tests/`: unit tests for the engine-free classes.
 
 ## Disclaimer
 
