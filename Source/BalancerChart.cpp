@@ -107,28 +107,9 @@ bool BalancerChart::init(const float tolerance)
 
 void BalancerChart::update(const float dt)
 {
-    _periodTimer += dt;
+    _curve.update(dt);
 
-    if (_periodTimer >= PERIOD_DELAY) {
-        _periodTimer -= PERIOD_DELAY;
-        _period = std::max(PERIOD_MIN, _period - PERIOD_STEP);
-    }
-
-    constexpr float twoPi = M_PI * 2.0f;
-    _phase += dt * twoPi / _period;
-    if (_phase >= twoPi)
-        _phase = fmod(_phase, twoPi);
-
-    const float sinVal = sin(_phase);
-    if (const int cosSign = (cos(_phase) >= 0.0f) ? 1 : -1; cosSign != _sinSign) {
-        const bool isPeak = (sinVal > 0.0f);
-        onExtremumReached(isPeak);
-        _sinSign = cosSign;
-    }
-
-    const float dy = clampf(_midLine + sinVal * _amplitude / 2.0f, 0.0f, 1.0f) * _contentSize.height;
-
-    _demandY = dy;
+    _demandY = _curve.getValue() * _contentSize.height;
     _supplyY = _supply * _contentSize.height;
 
     _sampleTimer += dt;
@@ -187,31 +168,10 @@ void BalancerChart::reset(const float initialValue)
     _headX = 0.0f;
     redraw();
 
-    _amplitude = 0.0f;
-    _midLine = initialValue;
-    _period = PERIOD_START;
-    _sinSign = -1;
-    _phase = 1.5f * M_PI;
-    onExtremumReached(false);
+    _curve.reset(initialValue);
 }
 
 void BalancerChart::setGraceTime(const float time) const
 {
     _graceLbl->setString(StringUtils::format("%.1fs", time));
-}
-
-void BalancerChart::onExtremumReached(const bool isPeak)
-{
-    const float halfAmp = _amplitude / 2.0f;
-    if (isPeak) {
-        const float extremumY = _midLine + halfAmp;
-        _amplitude = random(std::min(MIN_AMP, extremumY), std::min(MAX_AMP, extremumY));
-        _midLine = extremumY - _amplitude / 2.0f;
-    }
-    else {
-        const float extremumY = _midLine - halfAmp;
-        const float maxAmp = 1.0f - extremumY;
-        _amplitude = random(std::min(MIN_AMP, maxAmp), std::min(MAX_AMP, maxAmp));
-        _midLine = extremumY + _amplitude / 2.0f;
-    }
 }

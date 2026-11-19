@@ -5,6 +5,8 @@
 
 #include <deque>
 
+#include "DemandCurve.h"
+
 class BalancerChart : public ax::DrawNode
 {
 public:
@@ -39,13 +41,6 @@ private:
     const float HEAD_X = 0.96f;           // the newest sample stays at this fraction of the width
     const float GRACE_RADIUS = 10.0f;
 
-    const float PERIOD_DELAY = 3.0f;
-    const float PERIOD_STEP = 0.25f;
-    const float PERIOD_MIN = 6.0f;
-    const float PERIOD_START = 12.0f;
-    const float MIN_AMP = 0.1f;
-    const float MAX_AMP = 0.5f;
-
     // One point of the demand and supply curves, in pixels.
     struct Sample
     {
@@ -71,14 +66,8 @@ private:
     int _sampleIndex = 0; // samples taken since the last reset, minus one
     float _headX = 0.0f;  // x position of the newest sample
 
-    float _midLine = 0.5f;
-    float _amplitude = 0.0f;
-    float _period = 0.0f;
-    float _periodTimer = 0.0f;
-    float _phase = 0.0f;
-    int _sinSign = 1;
+    DemandCurve _curve;
 
-    void onExtremumReached(bool isPeak);
     void addSample();
     void redraw();
 };
