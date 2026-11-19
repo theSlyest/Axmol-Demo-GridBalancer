@@ -47,21 +47,9 @@ bool BalancerChart::init(const float tolerance)
     legend->drawLine(Vec2(200.0f, 0.0f), Vec2(250.0f, 0.0f), SUPPLY_COLOR, CHART);
     legend->drawSolidRect(Vec2(400.0f, -_toleranceWidth), Vec2(450.0f, _toleranceWidth), BAND_COLOR);
     legend->setPosition(16.0f, _contentSize.height + 32.0f);
-    const auto dLbl = Label::createWithTTF("demand", "fonts/arial.ttf", 18.0f);
-    dLbl->setTextColor(Color4B::GRAY);
-    dLbl->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT),
-    dLbl->setPosition(60.0f, 0.0f);
-    legend->addChild(dLbl);
-    const auto sLbl = Label::createWithTTF("supply", "fonts/arial.ttf", 18.0f);
-    sLbl->setTextColor(Color4B::GRAY);
-    sLbl->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT),
-    sLbl->setPosition(260.0f, 0.0f);
-    legend->addChild(sLbl);
-    const auto bLbl = Label::createWithTTF("tolerance band", "fonts/arial.ttf", 18.0f);
-    bLbl->setTextColor(Color4B::GRAY);
-    bLbl->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT),
-    bLbl->setPosition(460.0f, 0.0f);
-    legend->addChild(bLbl);
+    addLegendLabel(legend, "demand", 60.0f);
+    addLegendLabel(legend, "supply", 260.0f);
+    addLegendLabel(legend, "tolerance band", 460.0f);
     addChild(legend);
 
     const auto stencil = DrawNode::create();
@@ -103,6 +91,15 @@ bool BalancerChart::init(const float tolerance)
     _charts->addChild(_graceNode);
 
     return true;
+}
+
+void BalancerChart::addLegendLabel(Node* legend, const std::string& text, const float x)
+{
+    const auto label = Label::createWithTTF(text, "fonts/arial.ttf", 18.0f);
+    label->setTextColor(Color4B::GRAY);
+    label->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
+    label->setPosition(x, 0.0f);
+    legend->addChild(label);
 }
 
 void BalancerChart::update(const float dt, const float demand, const float supply)

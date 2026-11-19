@@ -60,6 +60,7 @@ private:
     int _sampleIndex = 0; // samples taken since the last reset, minus one
     float _headX = 0.0f;  // x position of the newest sample
 
+    static void addLegendLabel(ax::Node* legend, const std::string& text, float x);
     void addSample();
     void redraw();
 };
