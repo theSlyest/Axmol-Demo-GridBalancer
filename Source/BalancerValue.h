@@ -10,12 +10,13 @@ public:
 
     virtual bool init(const ax::Color4F& color, const std::string& name);
 
-    void setValue(const std::string& value) const { _label->setString(_name + ": " + value); }
+    void setValue(const std::string& value) const { _label->setString(_title + ": " + value); }
 
 private:
     static ax::Vec2 PADDING;
     static ax::Color4F BG_COLOR;
     static constexpr float BORDER = 4.0f;
 
+    std::string _title;
     ax::Label* _label = nullptr;
 };

@@ -1,15 +1,12 @@
 #include "BalancerScene.h"
 
+#include "Director.h"
+
 #include "2d/Menu.h"
 #include "2d/MenuItem.h"
 #include "UserDefault.h"
 
 USING_NS_AX;
-
-Scene* BalancerScene::createScene()
-{
-    return BalancerScene::create();
-}
 
 // on "init" you need to initialize your instance
 bool BalancerScene::init()
@@ -17,8 +14,8 @@ bool BalancerScene::init()
     if (!Scene::init())
         return false;
 
-    const auto& size = Director::getInstance()->getVisibleSize();
-    const Vec2& origin = Director::getInstance()->getVisibleOrigin();
+    const auto& size = _director->getVisibleSize();
+    const Vec2& origin = _director->getVisibleOrigin();
 
     // UPTIME
     _upTimeUi = BalancerValue::create(Color4F(0.2f, 0.6f, 1.0f, 1.0f), "UPTIME");
@@ -64,11 +61,11 @@ void BalancerScene::update(float dt)
         gen->update(dt);
         supply += gen->getValue();
     }
-    supply /= GENS;
+    supply /= static_cast<float>(_gens.size());
     _chart->setSupply(supply);
     _chart->update(dt);
     const float demand = _chart->getDemand();
-    if (abs(supply - demand) > TOLERANCE) {
+    if (std::abs(supply - demand) > TOLERANCE) {
         _downTime += dt;
         _chart->setGraceTime(_downTime);
         _chart->setGraceVisible(true);
@@ -108,12 +105,14 @@ void BalancerScene::setBest(const int best)
 
 void BalancerScene::initGenerators(const Vec2& size, const Vec2& origin)
 {
-    const float offset = size.width / (GENS * 2.0f);
-    for (int i = 0; i < GENS; ++i) {
-        const auto gen = BalancerGenerator::create(GEN_COLORS[i], GEN_NAMES[i], GEN_RATES[i]);
+    const auto count = static_cast<float>(GENERATORS.size());
+    const float offset = size.width / (count * 2.0f);
+    for (size_t i = 0; i < GENERATORS.size(); ++i) {
+        const auto& [name, color, rate] = GENERATORS[i];
+        const auto gen = BalancerGenerator::create(color, name, rate);
         gen->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
-        gen->setPosition(origin.x + offset + i * size.width / GENS, UI_OFFSET);
-        gen->resetValue(0.5f);
+        gen->setPosition(origin.x + offset + i * size.width / count, UI_OFFSET);
+        gen->resetValue(GEN_START);
         addChild(gen);
         _gens.push_back(gen);
     }
@@ -181,15 +180,11 @@ void BalancerScene::gameOver()
 
 void BalancerScene::reset()
 {
-    _demandGoal = GEN_START;
     _chart->reset(GEN_START);
     setStrikes(STRIKES);
     for (const auto gen : _gens)
         gen->resetValue(GEN_START);
 
-    _demandIncrease = random(0, 1);
-    _demandFactor = 0.3f;
-    _demandGoal = GEN_START;
     _endLayer->setVisible(false);
     scheduleUpdate();
 }

@@ -25,7 +25,7 @@ bool BalancerValue::init(const Color4F &color, const std::string &name)
     if(!DrawNode::init())
         return false;
 
-    _name = name;
+    _title = name;
 
     _label = Label::createWithTTF(name + ": 0000", "fonts/arial.ttf", 24.0f);
     _label->setHorizontalAlignment(TextHAlignment::CENTER);

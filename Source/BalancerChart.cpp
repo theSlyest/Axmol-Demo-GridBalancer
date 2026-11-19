@@ -1,4 +1,6 @@
 #include "BalancerChart.h"
+
+#include "Director.h"
 #include "2d/ClippingNode.h"
 
 USING_NS_AX;
@@ -101,7 +103,6 @@ bool BalancerChart::init(const float tolerance)
 
 void BalancerChart::update(const float dt)
 {
-    _elapsed += dt;
     _periodTimer += dt;
 
     if (_periodTimer >= PERIOD_DELAY) {

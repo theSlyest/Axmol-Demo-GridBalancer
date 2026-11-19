@@ -1,6 +1,5 @@
 #pragma once
 
-#include "2d/Camera.h"
 #include "2d/DrawNode.h"
 #include "2d/Label.h"
 
@@ -44,7 +43,6 @@ private:
     const float MAX_AMP = 0.5f;
 
     ax::Node* _charts = nullptr;
-    ax::Camera* _chartCamera = nullptr;
     ax::DrawNode* _demandChart = nullptr;
     ax::DrawNode* _bandChart = nullptr;
     ax::DrawNode* _supplyChart = nullptr;
@@ -57,7 +55,6 @@ private:
     float _supplyY = 100.0f;
     float _xt = 0.0f;
 
-    float _elapsed = 0.0f;
     float _midLine = 0.5f;
     float _amplitude = 0.0f;
     float _period = 0.0f;

@@ -25,6 +25,7 @@
 
 #include "AppDelegate.h"
 #include "BalancerScene.h"
+#include "Director.h"
 #include "RenderViewImpl.h"
 #include "Utils.h"
 
