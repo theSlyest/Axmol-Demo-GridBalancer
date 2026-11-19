@@ -1,152 +1,117 @@
-# Axmol Examples
+# Axmol Demo: Grid Balancer
 
-A collection of small games, gameplay mechanics, and technical demonstrations built with [Axmol Engine](https://axmol.dev/) and C++.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-The purpose of this repository is to provide compact, practical examples that can be studied, modified, and reused when learning Axmol or prototyping game mechanics.
+A small power-grid balancing game built with [Axmol Engine](https://axmol.dev/) and C++, written as a learning resource. The game rules, the signal generation and the views are separate classes, so each can be read on its own.
 
-## Repository Structure
+![Gameplay screenshot](docs/screenshot.png)
 
-Each example is stored in its own Git branch.
+## Gameplay
 
-The `master` branch contains the base Axmol project used as a starting point. To explore an example, switch to the corresponding branch:
+- Click the **up** and **down arrows** under each generator. Each click moves the generator's target by a quarter of the range.
+- The bar then glides toward its target at the generator's own rate: **FAST** (0.5 of the range per second), **MEDIUM** (0.25) and **SLOW** (0.125).
+- The **supply** is the average of the three generators. The **demand** is a sine wave with a random amplitude and offset at every peak and trough, and its period shrinks from 12 s to 6 s as the game goes on.
+- Keep the supply inside the **tolerance band** (±0.1 around the demand) to bank **uptime**.
+- Every 4 seconds spent outside the band costs a **strike**. You have 3 strikes.
+- When the strikes run out, the game ends. Your best uptime is saved between runs. Press **Play Again** to restart.
 
-```bash
-git clone https://github.com/theSlyest/AxmolExamples.git
-cd AxmolExamples
-git switch <example-branch>
-```
-
-For example:
-
-```bash
-git switch Minesweeper
-```
-
-You can list all available example branches with:
-
-```bash
-git branch --remotes
-```
-
-## Available Examples
-
-### Mini-games and puzzles
-
-| Branch         | Description                                                             |
-| -------------- | ----------------------------------------------------------------------- |
-| `Bomberman`    | A small game inspired by classic grid-based bomb mechanics.             |
-| `BrickBreaker` | A brick-breaking game with paddle, ball, and collision mechanics.       |
-| `Cooking`      | A cooking-themed gameplay prototype.                                    |
-| `CrossTheRoad` | A road-crossing game based on movement, timing, and obstacle avoidance. |
-| `DiskTower`    | A Tower of Hanoi-style puzzle.                                          |
-| `GridBalancer` | A grid-based balancing puzzle.                                          |
-| `Minesweeper`  | An implementation of the classic Minesweeper game.                      |
-| `Nonogram`     | A picture-logic puzzle based on row and column clues.                   |
-| `PegSolitaire` | An implementation of the classic peg solitaire puzzle.                  |
-| `Pentago`      | A board game featuring piece placement and rotating board sections.     |
-| `PoseMatch`    | A pose-matching gameplay prototype.                                     |
-| `Reversi`      | An implementation of the classic Reversi/Othello board game.            |
-| `RushHour`     | A sliding-block puzzle inspired by Rush Hour.                           |
-| `ShadowShape`  | A shape and shadow-matching game.                                       |
-| `Snake`        | An implementation of the classic Snake game.                            |
-| `Sudoku`       | An implementation of the classic number-placement puzzle.               |
-| `TetraStack`   | A block-stacking game using tetromino-like pieces.                      |
-| `WordGame`     | A word-based game prototype.                                            |
-
-### Action and gameplay mechanics
-
-| Branch             | Description                                                    |
-| ------------------ | -------------------------------------------------------------- |
-| `Escorting`        | An escort-oriented gameplay prototype.                         |
-| `LaserMirror`      | A laser-routing mechanic using reflective objects.             |
-| `RippleTank`       | A tank-based gameplay experiment featuring ripple effects.     |
-| `SideShooter`      | A side-view shooting game prototype.                           |
-| `SignalLock`       | A signal-based locking or synchronization mechanic.            |
-| `StealthDetection` | A demonstration of visibility and stealth-detection mechanics. |
-| `Teleporter`       | A teleportation gameplay mechanic.                             |
-
-### Technical and narrative examples
-
-| Branch        | Description                                                           |
-| ------------- | --------------------------------------------------------------------- |
-| `Clones`      | A gameplay experiment involving duplicated or synchronized entities.  |
-| `PathFinding` | A demonstration of pathfinding and grid navigation.                   |
-| `VisualNovel` | A basic visual-novel structure with narrative and dialogue mechanics. |
-
-> The examples are intentionally small and focused. They are designed as learning resources and prototypes rather than production-ready games.
+There are no image assets: everything is drawn with `DrawNode`.
 
 ## Requirements
 
 * A C++ development environment
 * [CMake](https://cmake.org/) 3.22 or later
-* [Axmol Engine](https://github.com/axmolengine/axmol)
-* The platform-specific tools required by Axmol
+* [Axmol Engine](https://github.com/axmolengine/axmol) 2.x and the platform tools it requires
 
-The base project currently targets Axmol Engine **2.11.4**.
+Refer to the [Axmol documentation](https://axmol.dev/manual/latest/) for installation and platform setup.
 
-Refer to the [Axmol documentation](https://axmol.dev/manual/latest/) for engine installation and platform setup instructions.
+## Build and run
 
-## Building an Example
-
-First, install and configure Axmol Engine. Then clone this repository and select the example you want to build:
+Clone the repository, then use the Axmol command-line tools:
 
 ```bash
-git clone https://github.com/theSlyest/AxmolExamples.git
-cd AxmolExamples
-git switch <example-branch>
+git clone https://github.com/theSlyest/Axmol-Demo-GridBalancer.git
+cd Axmol-Demo-GridBalancer
+axmol run -p osx -a arm64    # build and launch on Apple Silicon macOS
 ```
 
-Build the project using the standard Axmol workflow for your target platform.
+Change `-p` (and `-a`) for your platform, for example `-p win32` or `-p linux`. To build without launching, use `axmol build` with the same options. The platform project folders (`proj.android`, `proj.ios_mac`, `proj.linux`, `proj.wasm`, `proj.win32`, `proj.winrt`) come from the Axmol project template.
 
-For example, after configuring the Axmol command-line tools:
+## How the code is organized
 
-```bash
-axmol build
+The scene only builds nodes and connects them. The rules know nothing about nodes, and the views know nothing about the rules.
+
+```
+BalancerScene            creates the nodes, wires everything, forwards update(dt)
+ ├─ BalancerGame         rules and state; calls onUpTimeChanged / onStrikesChanged /
+ │   │                   onGraceChanged / onGameOver
+ │   ├─ DemandCurve      the demand the player has to follow
+ │   └─ GeneratorModel×3 value, target and rate of each generator
+ ├─ BalancerGenerator×3  bar and arrow buttons; fires onIncrease / onDecrease
+ ├─ BalancerChart        draws demand, supply and the tolerance band from a bounded history
+ ├─ BalancerHud          uptime, strikes and best boxes
+ ├─ BalancerGameOverLayer panel with the result and a Play Again button
+ └─ BestScore            best uptime saved with UserDefault
 ```
 
-Available targets and build options may depend on your operating system and Axmol installation. Consult the Axmol build documentation for the appropriate platform-specific command.
+Each frame the scene calls `BalancerGame::update`, then copies the generator values and the supply and demand into the views. When the player clicks an arrow, the generator view fires a callback and the scene forwards it to the game.
 
-## Learning from the Examples
+### The chart keeps a bounded history
 
-These projects may be useful for exploring topics such as:
+`BalancerChart` samples demand and supply 30 times per second into a fixed-size buffer and redraws the curves from it. The newest sample stays at 96% of the chart width, and older ones scroll left until they are dropped. The geometry therefore stays constant however long the game runs.
 
-* Scene and node management
-* Touch, mouse, and keyboard input
-* Grid-based gameplay
-* Collision detection
-* Movement and animation
-* Board-game rules
-* Pathfinding
-* State management
-* Puzzle validation
-* User-interface implementation
-* Reusable gameplay components
+### Try it: change the rules
 
-Because each example lives in an independent branch, its implementation can evolve without affecting the others.
+`BalancerGame` takes a `Config`, so most rules are one-line changes in `BalancerScene::initGame`:
 
-## Contributions
+```cpp
+BalancerGame::Config config;
+config.generatorRates = { 0.5f, 0.25f, 0.125f };
+config.tolerance = 0.15f;     // easier: a wider band
+config.gracePeriod = 2.0f;    // harder: strikes come faster
+config.strikes = 5;
+```
 
-Contributions, improvements, and bug fixes are welcome.
+To make the demand predictable while you experiment, give the game a fixed random source. `DemandCurve` calls it to choose each amplitude:
 
-If you would like to contribute:
+```cpp
+const auto middle = [](float min, float max) { return (min + max) / 2.0f; };
+_game = std::make_unique<BalancerGame>(config, middle);
+```
 
-1. Fork the repository.
-2. Create a branch from the example you want to improve.
-3. Make and test your changes.
-4. Open a pull request describing the changes.
+## What this example shows
 
-For a new example, please keep the implementation compact and focused on a clearly identifiable game or technical concept.
+| Concept | Where |
+| --- | --- |
+| Scene setup and wiring the parts together | `BalancerScene` |
+| Game rules that do not depend on the engine, reporting changes through callbacks | `BalancerGame` |
+| Plain classes that can be compiled and tested without Axmol | `BalancerGame`, `DemandCurve`, `GeneratorModel` |
+| Procedural signal generation with an injectable random source | `DemandCurve` |
+| A bounded sample history, so a scrolling chart does not grow forever | `BalancerChart` |
+| Procedural drawing with `DrawNode` | `BalancerChart`, `BalancerGenerator`, `BalancerValue` |
+| Clipping a scrolling area with `ClippingNode` | `BalancerChart` |
+| Buttons with `Menu` and `MenuItemLabel` | `BalancerGenerator`, `BalancerGameOverLayer` |
+| Saving a value between runs with `UserDefault` | `BestScore` |
+| Views that only display state they are given | `BalancerHud`, `BalancerGameOverLayer`, `BalancerGenerator` |
+
+## Source layout
+
+- `Source/BalancerScene.*`: creates the nodes and connects them.
+- `Source/BalancerGame.*`: strikes, grace time, uptime and game over; owns the generators and the demand.
+- `Source/DemandCurve.*`: the demand signal, with an injectable random source.
+- `Source/GeneratorModel.*`: one generator's value, target and rate.
+- `Source/BalancerGenerator.*`: the generator bar and its arrow buttons.
+- `Source/BalancerChart.*`: the scrolling chart with its legend and grace marker.
+- `Source/BalancerHud.*`, `Source/BalancerValue.*`: the top boxes and the single labeled box they use.
+- `Source/BalancerGameOverLayer.*`: the end-of-game panel.
+- `Source/BestScore.*`: the saved best uptime.
 
 ## Disclaimer
 
-This repository is primarily intended for experimentation and education. The examples may simplify architecture, error handling, content pipelines, or platform-specific considerations in order to keep the demonstrated concepts easy to understand.
+This project is intended for experimentation and education. It simplifies architecture, error handling and content in order to keep the concepts easy to follow.
 
 ## License
 
-This repository is licensed under the MIT License.
-
-You are free to use, modify, and distribute the source code, including in
-commercial projects, provided that the original copyright notice and license
-are retained. See the [LICENSE](LICENSE) file for details.
+This repository is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 Third-party assets and dependencies may be subject to their own licenses.
