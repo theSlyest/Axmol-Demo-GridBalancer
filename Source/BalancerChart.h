@@ -3,6 +3,8 @@
 #include "2d/DrawNode.h"
 #include "2d/Label.h"
 
+#include <deque>
+
 class BalancerChart : public ax::DrawNode
 {
 public:
@@ -32,7 +34,9 @@ private:
     const float BORDER = 3.0f;
     const float LINE = 2.0f;
     const float CHART = 5.0f;
-    const float SPEED_X = 32.0f;
+    const float SPEED_X = 32.0f;          // scrolling speed, in pixels per second
+    const float SAMPLE_INTERVAL = 1.0f / 30.0f; // the history is sampled 30 times per second
+    const float HEAD_X = 0.96f;           // the newest sample stays at this fraction of the width
     const float GRACE_RADIUS = 10.0f;
 
     const float PERIOD_DELAY = 3.0f;
@@ -41,6 +45,13 @@ private:
     const float PERIOD_START = 12.0f;
     const float MIN_AMP = 0.1f;
     const float MAX_AMP = 0.5f;
+
+    // One point of the demand and supply curves, in pixels.
+    struct Sample
+    {
+        float demand;
+        float supply;
+    };
 
     ax::Node* _charts = nullptr;
     ax::DrawNode* _demandChart = nullptr;
@@ -53,7 +64,12 @@ private:
     float _demandY = 100.0f;
     float _supply = 0.5f;
     float _supplyY = 100.0f;
-    float _xt = 0.0f;
+    // Bounded history: the oldest samples are dropped once they scroll out of the chart.
+    std::deque<Sample> _history;
+    size_t _capacity = 0;
+    float _sampleTimer = 0.0f;
+    int _sampleIndex = 0; // samples taken since the last reset, minus one
+    float _headX = 0.0f;  // x position of the newest sample
 
     float _midLine = 0.5f;
     float _amplitude = 0.0f;
@@ -63,4 +79,6 @@ private:
     int _sinSign = 1;
 
     void onExtremumReached(bool isPeak);
+    void addSample();
+    void redraw();
 };

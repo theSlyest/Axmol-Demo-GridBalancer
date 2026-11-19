@@ -30,6 +30,10 @@ bool BalancerChart::init(const float tolerance)
 
     _toleranceWidth = tolerance * _contentSize.height;
 
+    // Enough samples to fill the chart up to the head position.
+    const float dx = SPEED_X * SAMPLE_INTERVAL;
+    _capacity = static_cast<size_t>(std::ceil(_contentSize.width * HEAD_X / dx)) + 2;
+
     // Background
     drawSolidRect(Vec2::ZERO, Vec2(_contentSize), BG_COLOR);
     for (int i = 1; i < 4; ++i) {
@@ -124,34 +128,65 @@ void BalancerChart::update(const float dt)
 
     const float dy = clampf(_midLine + sinVal * _amplitude / 2.0f, 0.0f, 1.0f) * _contentSize.height;
 
-    const float shiftX = dt * SPEED_X;
-    const float x = _xt + shiftX;
-    const float sy = _supply * _contentSize.height;
-    const Vec2 dStart(_xt, _demandY);
-    const Vec2 dEnd(x, dy);
-    _bandChart->drawSolidRect(Vec2(_xt, _demandY - _toleranceWidth), Vec2(x, dy + _toleranceWidth), BAND_COLOR);
-    _demandChart->drawLine(dStart, dEnd, DEMAND_COLOR, CHART);
-    const Vec2 supplyPos(x, sy);
-    _supplyChart->drawLine(Vec2(_xt, _supplyY), supplyPos, SUPPLY_COLOR, CHART);
-    _graceNode->setPosition(supplyPos);
-    _xt = x;
     _demandY = dy;
-    _supplyY = sy;
-    if (_xt > _contentSize.width * 0.96f) 
-        _charts->setPositionX(_charts->getPositionX() - shiftX);
+    _supplyY = _supply * _contentSize.height;
+
+    _sampleTimer += dt;
+    if (_sampleTimer >= SAMPLE_INTERVAL) {
+        while (_sampleTimer >= SAMPLE_INTERVAL) {
+            _sampleTimer -= SAMPLE_INTERVAL;
+            addSample();
+        }
+        redraw();
+    }
+
+    _graceNode->setPosition(_headX, _supplyY);
 }
 
-void BalancerChart::reset(const float initialValue)
+void BalancerChart::addSample()
+{
+    _history.push_back({ _demandY, _supplyY });
+    if (_history.size() > _capacity)
+        _history.pop_front();
+
+    ++_sampleIndex;
+    _headX = std::min(static_cast<float>(_sampleIndex) * SPEED_X * SAMPLE_INTERVAL, _contentSize.width * HEAD_X);
+}
+
+void BalancerChart::redraw()
 {
     _bandChart->clear();
     _demandChart->clear();
     _supplyChart->clear();
-    _charts->setPositionX(0.0f);
+
+    // The newest sample sits at _headX; older ones are spaced dx apart to its left.
+    const float dx = SPEED_X * SAMPLE_INTERVAL;
+    const size_t last = _history.size() - 1;
+    for (size_t i = 1; i <= last; ++i) {
+        const Sample& from = _history[i - 1];
+        const Sample& to = _history[i];
+        const float x0 = _headX - static_cast<float>(last - (i - 1)) * dx;
+        const float x1 = _headX - static_cast<float>(last - i) * dx;
+
+        _bandChart->drawSolidRect(Vec2(x0, from.demand - _toleranceWidth), Vec2(x1, to.demand + _toleranceWidth), BAND_COLOR);
+        _demandChart->drawLine(Vec2(x0, from.demand), Vec2(x1, to.demand), DEMAND_COLOR, CHART);
+        _supplyChart->drawLine(Vec2(x0, from.supply), Vec2(x1, to.supply), SUPPLY_COLOR, CHART);
+    }
+}
+
+void BalancerChart::reset(const float initialValue)
+{
     _demandY = _contentSize.height * initialValue;
     _supplyY = _demandY;
     _supply = initialValue;
 
-    _xt = 0.0f;
+    _history.clear();
+    _history.push_back({ _demandY, _supplyY });
+    _sampleTimer = 0.0f;
+    _sampleIndex = 0;
+    _headX = 0.0f;
+    redraw();
+
     _amplitude = 0.0f;
     _midLine = initialValue;
     _period = PERIOD_START;
